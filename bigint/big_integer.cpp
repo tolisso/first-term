@@ -423,7 +423,7 @@ big_integer operator>>(big_integer const& a, int shift) {
         for (size_t i = ans_size; i < a.arr.size(); i++) {
             ans.arr[i] = UINT32_MAX;
         }
-        return ans.unsigned_binary() - 1;
+        return ans.unsigned_binary();
     }
 }
 big_integer& big_integer::operator>>=(int shift) {
@@ -435,8 +435,11 @@ big_integer operator<<(big_integer const& a, int shift) {
     for (size_t i = 0; i < discharge; i++) {
         ans.arr.push_back(0);
     }
-    for (size_t i = 0; i < a.arr.size(); i++) {
+    for (size_t i = a.arr.size() - 1; ; i--) {
         std::swap(ans.arr[i], ans.arr[i + discharge]);
+        if (i == 0) {
+            break;
+        }
     }
     ans.sign = a.sign;
     return ans.mul_uint(static_cast<uint32_t > (1) << (shift % 32));
