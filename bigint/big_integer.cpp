@@ -409,21 +409,14 @@ void remove_pref(std::vector<uint32_t> &vec, size_t to) {
 big_integer operator>>(big_integer const& a, int shift) {
     size_t discharge = shift / 32;
     if (a >= 0) {
-
         big_integer ans = a;
         remove_pref(ans.arr, discharge);
         return ans.div_uint(static_cast<uint32_t > (1) << (shift % 32));
     } else {
         big_integer ans = a;
-        ans.div_uint(static_cast<uint32_t > (1) << (shift % 32));
-        ans = ans.signed_binary();
-        remove_pref(ans.arr, discharge);
-        size_t ans_size = ans.arr.size();
-        ans.arr.resize(a.arr.size());
-        for (size_t i = ans_size; i < a.arr.size(); i++) {
-            ans.arr[i] = UINT32_MAX;
-        }
-        return ans.unsigned_binary();
+        big_integer shift_mod = 1;
+        shift_mod <<= (shift);
+        return ans / shift_mod - 1;
     }
 }
 big_integer& big_integer::operator>>=(int shift) {
