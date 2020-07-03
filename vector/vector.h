@@ -222,6 +222,7 @@ private:
             for (size_t j = 0; j < i; j++) {
                 new_data[j].~T();
             }
+            operator delete(new_data);
             throw;
         }
         for (size_t i = 0; i < size_; i++) {
