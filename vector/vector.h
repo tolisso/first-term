@@ -12,14 +12,14 @@ struct vector
     typedef T* iterator;
     typedef T const* const_iterator;
 
-    vector() {                              // O(1) nothrow
+    vector() { // O(1) nothrow
         data_ = nullptr;
         size_ = 0;
         capacity_ = 0;
     };
 
 
-    vector(vector const& other) : vector() {                 // O(N) strong
+    vector(vector const& other) : vector() { // O(N) strong
         if (other.capacity_ == 0) {
             size_ = 0;
             capacity_ = 0;
@@ -32,134 +32,124 @@ struct vector
         T* new_data;
         try {
             new_data = static_cast<T*>(operator new(new_size * sizeof(T)));
-
             for (; i < new_size; i++) {
                 new(new_data + i) T(other[i]);
             }
         } catch (std::exception const& exc) {
-            for (size_t j = 0; j < i; j++) {
-                new_data[j].~T();
-            }
-            operator delete(new_data);
+            delete_arr(new_data, i);
             throw;
         }
-        for (size_t i = 0; i < size_; i++) {
-            data_[i].~T();
-        }
-        operator delete(data_);
+        delete_arr(data_, size_);
         data_ = new_data;
         size_ = new_size;
         capacity_ = new_capacity;
     }
 
-    vector& operator=(vector const& other) {
+    vector& operator=(vector const& other) { // O(N) strong
         vector<T> temp(other);
         swap(temp);
         return *this;
-    } // O(N) strong
+    }
 
-    ~vector() {
-        for (size_t i = 0; i < size_; i++) {
-            data_[i].~T();
-        }
-        operator delete(data_);
-    }                              // O(N) nothrow
+    ~vector() { // O(N) nothrow
+        delete_arr(data_, size_);
+    }
 
-    T& operator[](size_t i) {
+    T& operator[](size_t i) { // O(1) nothrow
         return data_[i];
-    }                // O(1) nothrow
-    T const& operator[](size_t i) const {
+    }
+    T const& operator[](size_t i) const { // O(1) nothrow
         return data_[i];
-    }    // O(1) nothrow
+    }
 
-    T* data() {
+    T* data() { // O(1) nothrow
         return data_;
-    };                              // O(1) nothrow
-    T const* data() const {
+    };
+    T const* data() const { // O(1) nothrow
         return data_;
-    }                  // O(1) nothrow
-    size_t size() const {
+    }
+    size_t size() const { // O(1) nothrow
         assert (size_ >= 0);
         return size_;
-    }                    // O(1) nothrow
+    }
 
-    T& front() {
+    T& front() { // O(1) nothrow
         assert (size_ >= 0);
         return data_[0];
-    }                             // O(1) nothrow
-    T const& front() const {
+    }
+    T const& front() const { // O(1) nothrow
         assert (size_ > 0);
         return data_[0];
-    };                 // O(1) nothrow
+    };
 
-    T& back() {
+    T& back() { // O(1) nothrow
         assert (size_ > 0);
         return data_[size_ - 1];
-    }                              // O(1) nothrow
-    T const& back() const {
+    }
+    T const& back() const { // O(1) nothrow
         assert (size_ > 0);
         return data_[size_ - 1];
-    }                  // O(1) nothrow
-    void push_back(T const& elem) {
+    }
+    void push_back(T const& elem) { // O(1)* strong
         T temp(elem);
         if (size_ == capacity_) {
             reserve(capacity_ * 2 + 1);
         }
         new(data_ + size_) T(temp);
         size_++;
-    }               // O(1)* strong
-    void pop_back() {
+    }
+    void pop_back() { // O(1) nothrow
         assert(size_ != 0);
         data_[--size_].~T();
-    }                        // O(1) nothrow
+    }
 
-    bool empty() const {
+    bool empty() const { // O(1) nothrow
         return size_ == 0;
-    }                     // O(1) nothrow
+    }
 
-    size_t capacity() const {
+    size_t capacity() const { // O(1) nothrow
         return capacity_;
-    };                // O(1) nothrow
-    void reserve(size_t new_capacity) {
+    };
+    void reserve(size_t new_capacity) { // O(N) strong
         if (new_capacity <= capacity_) {
             return;
         }
         new_buffer(new_capacity);
-    }                   // O(N) strong
-    void shrink_to_fit() {
+    }
+    void shrink_to_fit() { // O(N) strong
         if (size_ == 0) {
             new_buffer(0);
         } else if (capacity_ != size_)
             new_buffer(size_);
-    }                   // O(N) strong
+    }
 
-    void clear() {
+    void clear() { // O(N) nothrow
         for (size_t i = 0; i < size_; i++) {
             pop_back();
         }
-    };                           // O(N) nothrow
+    };
 
-    void swap(vector& other) {
+    void swap(vector& other) { // O(1) nothrow
         std::swap(capacity_, other.capacity_);
         std::swap(size_, other.size_);
         std::swap(data_, other.data_);
-    }                     // O(1) nothrow
+    }
 
-    iterator begin() {
+    iterator begin() { // O(1) nothrow
         return data_;
-    }                       // O(1) nothrow
-    iterator end() {
+    }
+    iterator end() { // O(1) nothrow
         return data_ + size_;
-    }                         // O(1) nothrow
+    }
 
-    const_iterator begin() const {
+    const_iterator begin() const { // O(1) nothrow
         return data_;
-    };           // O(1) nothrow
-    const_iterator end() const {
+    };
+    const_iterator end() const { // O(1) nothrow
         return data_ + size_;
-    };             // O(1) nothrow
+    };
 
-    iterator insert(iterator pos_it, T const& elem) {
+    iterator insert(iterator pos_it, T const& elem) { // O(N) weak
         size_t pos = pos_it - begin();
         push_back(elem);
         size_t i = size_ - 1;
@@ -167,12 +157,12 @@ struct vector
             std::swap(data_[i], data_[i - 1]);
         }
         return data_ + i;
-    } // O(N) weak
-    iterator insert(const_iterator pos, T const& elem) {
+    }
+    iterator insert(const_iterator pos, T const& elem) { // O(N) weak
         return insert(const_cast<iterator>(pos), elem);
-    }; // O(N) weak
+    };
 
-    iterator erase(iterator pos_it) {
+    iterator erase(iterator pos_it) { // O(N) weak
         size_t pos = pos_it - begin();
         size_t i = pos;
         for (; i + 1 < size_; i++) {
@@ -180,12 +170,12 @@ struct vector
         }
         pop_back();
         return begin() + pos;
-    }           // O(N) weak
-    iterator erase(const_iterator pos) {
+    }
+    iterator erase(const_iterator pos) { // O(N) weak
         return erase(const_cast<iterator >(pos));
-    }     // O(N) weak
+    }
 
-    iterator erase(iterator first, iterator last) {
+    iterator erase(iterator first, iterator last) { // O(N) weak
         for (iterator l = first, r = last; r != end(); l++, r++) {
             std::swap(*l, *r);
         }
@@ -193,8 +183,8 @@ struct vector
             pop_back();
         }
         return data_ + (last - first);
-    } // O(N) weak
-    iterator erase(const_iterator first, const_iterator last) {
+    }
+    iterator erase(const_iterator first, const_iterator last) { // O(N) weak
         for (iterator l = const_cast<iterator >(first), r = const_cast<iterator >(last); r != end(); l++, r++) {
             std::swap(*l, *r);
         }
@@ -202,7 +192,7 @@ struct vector
             pop_back();
         }
         return data_ + (last - first);
-    }; // O(N) weak
+    };
 
 private:
     size_t increase_capacity() {
@@ -221,10 +211,7 @@ private:
                 new(new_data + i) T(data_[i]);
             }
         } catch (std::exception const& exc) {
-            for (size_t j = 0; j < i; j++) {
-                new_data[j].~T();
-            }
-            operator delete(new_data);
+            delete_arr(new_data, i);
             throw;
         }
         for (size_t i = 0; i < size_; i++) {
@@ -241,6 +228,12 @@ private:
             data_ = new_data;
             capacity_ = new_capacity;
         }
+    }
+    void delete_arr(T* arr, size_t sz) {
+        for (size_t j = 0; j < sz; j++) {
+            arr[j].~T();
+        }
+        operator delete(arr);
     }
 
 private:
