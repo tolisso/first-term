@@ -40,6 +40,7 @@ struct vector
             for (size_t j = 0; j < i; j++) {
                 new_data[j].~T();
             }
+            operator delete(new_data);
             throw;
         }
         for (size_t i = 0; i < size_; i++) {
@@ -104,12 +105,7 @@ struct vector
         if (size_ == capacity_) {
             reserve(capacity_ * 2 + 1);
         }
-        try {
-            new(data_ + size_) T(temp);
-        } catch (std::exception const&) {
-            operator delete(data_ + size_);
-            throw;
-        }
+        new(data_ + size_) T(temp);
         size_++;
     }               // O(1)* strong
     void pop_back() {
