@@ -100,11 +100,11 @@ struct vector
         return data_[size_ - 1];
     }                  // O(1) nothrow
     void push_back(T const& elem) {
-        T temp(elem);
         if (size_ == capacity_) {
             reserve(capacity_ * 2 + 1);
         }
-        new(data_ + size_++) T(temp);
+        new(data_ + size_) T(elem);
+        size_++;
     }               // O(1)* strong
     void pop_back() {
         assert(size_ != 0);
