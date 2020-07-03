@@ -101,11 +101,16 @@ struct vector
     }                  // O(1) nothrow
     void push_back(T const& elem) {
         T temp(elem);
-        if (size_ == capacity_) {
-            reserve(capacity_ * 2 + 1);
+        try {
+            if (size_ == capacity_) {
+                reserve(capacity_ * 2 + 1);
+            }
+            new(data_ + size_) T(temp);
+            size_++;
+        }  catch (std::exception const&) {
+            temp.~T();
+            throw;
         }
-        new(data_ + size_) T(temp);
-        size_++;
     }               // O(1)* strong
     void pop_back() {
         assert(size_ != 0);
