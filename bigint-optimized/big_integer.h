@@ -1,59 +1,8 @@
 #ifndef BIG_INTEGER_H
 #define BIG_INTEGER_H
 
-#include <cstddef>
-#include <gmp.h>
-#include <iosfwd>
-#include <stdint-gcc.h>
-#include <vector>
 #include <functional>
-
-struct big_ {
-    uint32_t *refs;
-    std::vector<uint32_t> *arr;
-};
-
-struct small_arr {
-    uint32_t _0;
-    uint32_t _1;
-    uint32_t _2;
-    uint32_t _3;
-    uint32_t const& operator[](size_t) const;
-    uint32_t& operator[](size_t);
-    void equal(small_arr const&, size_t const& size);
-};
-
-struct small_ {
-    small_arr arr;
-};
-
-struct array_ {
-public:
-    explicit array_(size_t size);
-    array_(array_ const&);
-//    uint32_t& operator[](size_t);
-//    uint32_t const& operator[](size_t) const;
-    void set(size_t, uint32_t);
-    bool operator==(array_ const&) const;
-    uint32_t get(size_t) const;
-    array_& operator=(array_ const&);
-    ~array_();
-    void clear_big();
-    size_t size() const;
-    void pop_back();
-    void push_back(uint32_t);
-    void resize(size_t);
-    void erase(size_t, size_t);
-private:
-    void to_big();
-    void make_unique();
-    size_t size_;
-    bool is_big;
-    union {
-        big_ big;
-        small_ small;
-    };
-};
+#include "array_.h"
 
 struct big_integer
 {
@@ -102,9 +51,6 @@ struct big_integer
     friend big_integer operator>>(big_integer const& a, int b);
 
     friend std::string to_string(big_integer const& a);
-
-
-
 
 private:
     array_ arr;

@@ -30,11 +30,7 @@ big_integer::big_integer(int a) : arr(1){
     }
 }
 
-big_integer& big_integer::operator=(big_integer const& other) {
-    arr = other.arr;
-    sign = other.sign;
-    return *this;
-}
+big_integer& big_integer::operator=(big_integer const& other) = default;
 
 big_integer::big_integer(std::string const &str) : arr(1) {
     sign = false;
@@ -214,14 +210,6 @@ big_integer& big_integer::operator/=(big_integer const &val) {
             dq -= d;
         }
         q.arr.set(k, qt);
-//        for (size_t i = 0; i < r.arr.size(); i++) {
-//            std::cout << r.arr[i] << " ";
-//        }
-//        std::cout << std::endl;
-//        for (size_t i = 0; i < dq.arr.size(); i++) {
-//            std::cout << dq.arr[i] << " ";
-//        }
-//        std::cout << std::endl;
         difference(dq, r, k, m);
         if (r.arr.get(r.arr.size() - 1) == 0) {
             r.arr.pop_back();
@@ -256,9 +244,6 @@ void difference(big_integer const& dq, big_integer &r, size_t k, size_t m) {
         if (i < dq.arr.size()) {
             cur_dq = dq.arr.get(i);
         }
-//        std::cout << r.arr[from + i] << std::endl;
-//        std::cout << cur_dq << std::endl;
-//        std::cout << std::endl;
         uint64_t val = (static_cast<uint64_t>(r.arr.get(from + i)) - cur_dq - remainder);
         remainder = (r.arr.get(from + i) < cur_dq + remainder);
         r.arr.set(from + i, static_cast<uint32_t >(val));
@@ -553,201 +538,4 @@ big_integer big_integer::operator--(int) {
     big_integer ans(*this);
     *this -= 1;
     return ans;
-}
-
-///=========================@_array part@=========================
-
-array_::array_(size_t size) {
-    if (size > 4) {
-        big.arr = new std::vector<uint32_t>();
-        big.arr->resize(size);
-        big.refs = new uint32_t(1);
-        is_big = true;
-    } else {
-        is_big = false;
-    }
-    size_ = size;
-}
-
-array_::array_(array_ const& other) {
-    if (other.is_big) {
-        big.arr = other.big.arr;
-        big.refs = other.big.refs;
-        (*big.refs)++;
-    } else {
-        small.arr.equal(other.small.arr, other.size_);
-    }
-    is_big = other.is_big;
-    size_ = other.size_;
-}
-
-array_& array_::operator=(array_ const& other) {
-    clear_big();
-    if (other.is_big) {
-        big.arr = other.big.arr;
-        big.refs = other.big.refs;
-        (*other.big.refs)++;
-    } else {
-        small.arr.equal(other.small.arr, other.size_);
-    }
-    is_big = other.is_big;
-    size_ = other.size_;
-    return *this;
-}
-
-array_::~array_() {
-    clear_big();
-}
-
-void array_::clear_big() {
-    if (is_big) {
-        if (--(*big.refs) == 0) {
-            delete big.arr;
-            delete big.refs;
-        }
-    }
-}
-
-//uint32_t& array_::operator[](size_t i) {
-//    if (size_ <= 4) {
-//        return small.arr[i];
-//    }
-//    return big.arr[i];
-//}
-//
-//uint32_t const& array_::operator[](size_t i) const {
-//    if (size_ <= 4) {
-//        return small.arr[i];
-//    }
-//    return big.arr[i];
-//}
-
-void array_::set(size_t i, uint32_t val) {
-    if (!is_big) {
-        small.arr[i] = val;
-    } else {
-        if (*big.refs != 1) {
-//        std::cout << *refs << std::endl;
-            auto new_arr = new std::vector<uint32_t >();
-            new_arr->resize(size_);
-            for (size_t i = 0; i < size_; i++) {
-                (*new_arr)[i] = (*big.arr)[i];
-            }
-            clear_big();
-            big.refs = new uint32_t(1);
-            big.arr = new_arr;
-        }
-        (*big.arr)[i] = val;
-    }
-}
-
-uint32_t array_::get(size_t i) const {
-    if (!is_big) {
-        return small.arr[i];
-    } else {
-        return (*big.arr)[i];
-    }
-}
-
-void array_::to_big() {
-    if (!is_big) {
-        auto new_arr = new std::vector<uint32_t>();
-        for (size_t i = 0; i < size_; i++) {
-            new_arr->push_back(small.arr[i]);
-        }
-        is_big = true;
-        big.arr = new_arr;
-        big.refs = new uint32_t(1);
-    }
-}
-
-void array_::make_unique() { /// Pre: is_big == true;
-    if (*big.refs != 1) {
-        auto new_arr = new std::vector<uint32_t >();
-        new_arr->resize(size_);
-        for (size_t i = 0; i < size_; i++) {
-            (*new_arr)[i] = (*big.arr)[i];
-        }
-        clear_big();
-        big.refs = new uint32_t(1);
-        big.arr = new_arr;
-    }
-}
-
-void array_::pop_back() {
-    to_big();
-    make_unique();
-    big.arr->pop_back();
-    size_--;
-}
-
-void array_::push_back(uint32_t i) {
-    to_big();
-    make_unique();
-    big.arr->push_back(i);
-    size_++;
-}
-
-void array_::resize(size_t size) {
-    to_big();
-    make_unique();
-    big.arr->resize(size);
-    size_ = size;
-}
-
-size_t array_::size() const {
-    return size_;
-}
-
-uint32_t& small_arr::operator[](size_t i) {
-    if (i == 0) {
-        return _0;
-    } else if (i == 1) {
-        return _1;
-    } else if (i == 2) {
-        return _2;
-    }
-    return _3;
-}
-
-uint32_t const& small_arr::operator[](size_t i) const {
-    if (i == 0) {
-        return _0;
-    } else if (i == 1) {
-        return _1;
-    } else if (i == 2) {
-        return _2;
-    }
-    return _3;
-}
-inline void small_arr::equal(small_arr const & other, size_t const&size) {
-    switch(size) {
-        case 4:
-            _3 = other._3;
-        case 3:
-            _2 = other._2;
-        case 2:
-            _1 = other._1;
-        case 1:
-            _0 = other._0;
-    }
-}
-
-bool array_::operator==(array_ const& other) const {
-    if (size_ != other.size_) {
-        return false;
-    }
-    for (size_t i = 0; i < size_; i++) {
-        if (this->get(i) != other.get(i)) {
-            return false;
-        }
-    }
-    return true;
-}
-
-void array_::erase(size_t a, size_t b) {
-    to_big();
-    make_unique();
-    big.arr->erase(big.arr->begin() + a, big.arr->begin() + b);
-    size_ = big.arr->size();
 }
