@@ -9,7 +9,7 @@ _start:
 ; loop_counter - r12
                 sub             rsp, 4 * 128 * 8
                 lea             rdi, [rsp + 256 * 8]
-                lea             r8, [rsp + 256 * 8]
+                mov             r8, rsp
                 mov             rcx, 128
                 mov             r12, 128 * 8 * 8
                 call            read_long
