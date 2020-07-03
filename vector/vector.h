@@ -12,7 +12,7 @@ struct vector
     typedef T* iterator;
     typedef T const* const_iterator;
 
-    vector() { // O(1) nothrow
+    vector() noexcept { // O(1) nothrow
         data_ = nullptr;
         size_ = 0;
         capacity_ = 0;
@@ -51,63 +51,66 @@ struct vector
         return *this;
     }
 
-    ~vector() { // O(N) nothrow
+    ~vector() noexcept { // O(N) nothrow
         delete_arr(data_, size_);
     }
 
-    T& operator[](size_t i) { // O(1) nothrow
+    T& operator[](size_t i) noexcept { // O(1) nothrow
         return data_[i];
     }
-    T const& operator[](size_t i) const { // O(1) nothrow
+    T const& operator[](size_t i) const noexcept { // O(1) nothrow
         return data_[i];
     }
 
-    T* data() { // O(1) nothrow
+    T* data() noexcept { // O(1) nothrow
         return data_;
     };
-    T const* data() const { // O(1) nothrow
+    T const* data() const noexcept { // O(1) nothrow
         return data_;
     }
-    size_t size() const { // O(1) nothrow
+    size_t size() const noexcept { // O(1) nothrow
         assert (size_ >= 0);
         return size_;
     }
 
-    T& front() { // O(1) nothrow
+    T& front() noexcept { // O(1) nothrow
         assert (size_ >= 0);
         return data_[0];
     }
-    T const& front() const { // O(1) nothrow
+    T const& front() const noexcept { // O(1) nothrow
         assert (size_ > 0);
         return data_[0];
     };
 
-    T& back() { // O(1) nothrow
+    T& back() noexcept { // O(1) nothrow
         assert (size_ > 0);
         return data_[size_ - 1];
     }
-    T const& back() const { // O(1) nothrow
+    T const& back() const noexcept { // O(1) nothrow
         assert (size_ > 0);
         return data_[size_ - 1];
     }
     void push_back(T const& elem) { // O(1)* strong
-        T temp(elem);
         if (size_ == capacity_) {
+            T temp(elem);
             reserve(capacity_ * 2 + 1);
+            new(data_ + size_) T(temp);
+            size_++;
+        } else {
+            new(data_ + size_) T(elem);
+            size_++;
         }
-        new(data_ + size_) T(temp);
-        size_++;
     }
-    void pop_back() { // O(1) nothrow
+    void pop_back() noexcept { // O(1) nothrow
         assert(size_ != 0);
         data_[--size_].~T();
     }
 
-    bool empty() const { // O(1) nothrow
+    bool empty() const noexcept { // O(1) nothrow
         return size_ == 0;
     }
 
-    size_t capacity() const { // O(1) nothrow
+    size_t capacity() const noexcept { // O(1) nothrow
         return capacity_;
     };
     void reserve(size_t new_capacity) { // O(N) strong
@@ -123,29 +126,29 @@ struct vector
             new_buffer(size_);
     }
 
-    void clear() { // O(N) nothrow
-        for (size_t i = 0; i < size_; i++) {
+    void clear() noexcept { // O(N) nothrow
+        for (; size_ != 0;) {
             pop_back();
         }
     };
 
-    void swap(vector& other) { // O(1) nothrow
+    void swap(vector& other) noexcept { // O(1) nothrow
         std::swap(capacity_, other.capacity_);
         std::swap(size_, other.size_);
         std::swap(data_, other.data_);
     }
 
-    iterator begin() { // O(1) nothrow
+    iterator begin() noexcept { // O(1) nothrow
         return data_;
     }
-    iterator end() { // O(1) nothrow
+    iterator end() noexcept { // O(1) nothrow
         return data_ + size_;
     }
 
-    const_iterator begin() const { // O(1) nothrow
+    const_iterator begin() const noexcept { // O(1) nothrow
         return data_;
     };
-    const_iterator end() const { // O(1) nothrow
+    const_iterator end() const noexcept { // O(1) nothrow
         return data_ + size_;
     };
 
@@ -184,24 +187,6 @@ struct vector
         }
         return data_ + (last - first);
     }
-    iterator erase(const_iterator first, const_iterator last) { // O(N) weak
-        for (iterator l = const_cast<iterator >(first), r = const_cast<iterator >(last); r != end(); l++, r++) {
-            std::swap(*l, *r);
-        }
-        for (size_t i = 0; i < last - first; i++) {
-            pop_back();
-        }
-        return data_ + (last - first);
-    };
-
-private:
-    size_t increase_capacity() {
-        reserve(2 * capacity_ + 1);
-        return 2 * capacity_ + 1;
-    };
-    void push_back_realloc(T const& elem) {
-        new(data_ + size_++) T(elem);
-    }
     void new_buffer(size_t new_capacity) {
         T* new_data;
         size_t i = 0;
@@ -214,8 +199,8 @@ private:
             delete_arr(new_data, i);
             throw;
         }
-        for (size_t i = 0; i < size_; i++) {
-            data_[i].~T();
+        for (size_t i = size_; i > 0; i--) {
+            data_[i - 1].~T();
         }
         if (capacity_ != 0) {
             operator delete(data_);
@@ -230,8 +215,8 @@ private:
         }
     }
     void delete_arr(T* arr, size_t sz) {
-        for (size_t j = 0; j < sz; j++) {
-            arr[j].~T();
+        for (size_t j = sz; j > 0; j--) {
+            arr[j - 1].~T();
         }
         operator delete(arr);
     }
