@@ -7,11 +7,11 @@ _start:
 ; first - r9
 ; second - r10
 ; loop_counter - r12
-                sub             rsp, 3 * 1024 * 8
-                lea             rdi, [rsp + 1024 * 8]
-                lea             r8, [rsp + 2048 * 8]
-                mov             rcx, 1024
-                mov             r12, 1024 * 8 * 8
+                sub             rsp, 4 * 128 * 8
+                lea             rdi, [rsp + 256 * 8]
+                lea             r8, [rsp + 256 * 8]
+                mov             rcx, 128
+                mov             r12, 128 * 8 * 8
                 call            read_long
                 mov             r9, rdi
                 mov             rdi, rsp
@@ -22,7 +22,7 @@ _start:
                 call            set_zero
                 mov             r8, rdi
                 pop             rdi
-                lea             rsi, [rsp + 1024 * 8]
+                lea             rsi, [rsp + 128 * 8]
                 
 .mainloop:
                 
