@@ -42,6 +42,7 @@ private:
     bool is_big;
     union {
         big_ big;
+        small_ small;
     };
 };
 
