@@ -1,59 +1,53 @@
-      section         .text
+section         .text
 
-                global          _start
+global          _start
 _start:
 ; second(rsp):first:third
 ; ans - r8
 ; first - r9
 ; second - r10
-; loop_counter - r12
-                sub             rsp, 4 * 128 * 8
-                lea             rdi, [rsp + 256 * 8]
-                mov             r8, rsp
-                mov             rcx, 128
-                mov             r12, 128 * 8 * 8
+; outer_loop_counter - r11
+; inner_loop_counter - r12
+                sub             rsp, 4 * 129 * 8
+                lea             rdi, [rsp + 129 * 8]
+                lea             r8, [rsp + 2 * 129 * 8]
+                mov             rcx, 129
                 call            read_long
                 mov             r9, rdi
                 mov             rdi, rsp
                 call            read_long
                 mov             r10, rdi
+                mov             rcx, 129 * 2 ; !!!
                 push            rdi ; rdi - second operand
                 mov             rdi, r8
                 call            set_zero
-                mov             r8, rdi
                 pop             rdi
-                lea             rsi, [rsp + 128 * 8]
-                
+                mov             rcx, 129 ; !!!
+                lea             rsi, [rsp + 129 * 8]
+                mov             r11, 129
 .mainloop:
-                
+                mov             rbx, [r10]
+                and             rbx, rbx
+                jz              .if_dest
+
                 mov             rdi, r9
-                mov             rbx, 10
-                call            div_long_short
-                
-                or              rdx, rdx
-                jz              .if
-                
-                mov             rbx, rdx
-                mov             rdi, r10
                 call            mul_long_short
-                
+
                 mov             rdi, r8
-                mov             rsi, r10
+                mov             rsi, r9
                 call            add_long_long
-                
-                mov             rdi, r10
+
+                mov             rdi, r9
                 call            div_long_short
-.if:
-                mov             rdi, r10
-                mov             rbx, 10
-                call            mul_long_short
-                
-                
-                dec             r12
+.if_dest:
+                lea             r10, [r10 + 8]
+                lea             r8, [r8 + 8]
+                dec             r11
                 jnz             .mainloop
-                
-                
+; .mainloop:end
+                lea             r8, [r8 - 129 * 8]
                 mov             rdi, r8
+                mov             rcx, 256
                 call            write_long
                 
                 mov             al, 0x0a
