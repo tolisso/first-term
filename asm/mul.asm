@@ -8,53 +8,80 @@ _start:
 ; second - r10
 ; outer_loop_counter - r11
 ; inner_loop_counter - r12
-                sub             rsp, 4 * 129 * 8
-                lea             rdi, [rsp + 129 * 8]
-                lea             r8, [rsp + 2 * 129 * 8]
-                mov             rcx, 129
+                sub             rsp, 4 * 128 * 8
+                lea             rdi, [rsp + 128 * 8]
+                lea             r8, [rsp + 2 * 128 * 8]
+                mov             rcx, 128
                 call            read_long
                 mov             r9, rdi
                 mov             rdi, rsp
                 call            read_long
                 mov             r10, rdi
-                mov             rcx, 129 * 2 ; !!!
-                push            rdi ; rdi - second operand
+
+                call            mul_long_long
+
+                mov             rdi, r8
+                mov             rcx, 128 * 2
+                call            write_long
+
+                mov             al, 0x0a
+                call            write_char
+
+
+                jmp             exit
+
+;   r8 - result (sz = 128 * 2)
+;   r9 - first multiplier (sz = 128)
+;   r10 - second multiplier (sz = 128)
+mul_long_long:
+                push            r12
+                push            rcx
+                push            rdi
+                push            rsi
+                mov             r11, 128
+                lea             rsp, [rsp - 129 * 8]
+
+                mov             rcx, 128 * 2
                 mov             rdi, r8
                 call            set_zero
-                pop             rdi
-                mov             rcx, 129 ; !!!
-                lea             rsi, [rsp + 129 * 8]
-                mov             r11, 129
+
+                mov             r12, rsp
 .mainloop:
-                mov             rbx, [r10]
-                and             rbx, rbx
-                jz              .if_dest
 
-                mov             rdi, r9
-                call            mul_long_short
+                mov             rcx, 129
+                mov             rdi, r12
+                call            set_zero
 
-                mov             rdi, r8
+                mov             rcx, 128
+                mov             rdi, r12
                 mov             rsi, r9
                 call            add_long_long
 
-                mov             rdi, r9
-                call            div_long_short
-.if_dest:
+
+                mov             rbx, [r10]
+
+                mov             rcx, 129
+                mov             rdi, r12
+                call            mul_long_short
+
+                mov             rdi, r8
+                mov             rsi, r12
+                call            add_long_long
+
                 lea             r10, [r10 + 8]
                 lea             r8, [r8 + 8]
+
                 dec             r11
                 jnz             .mainloop
 ; .mainloop:end
-                lea             r8, [r8 - 129 * 8]
-                mov             rdi, r8
-                mov             rcx, 256
-                call            write_long
-                
-                mov             al, 0x0a
-                call            write_char
-                
-
-                jmp             exit
+                lea             r8, [r8 - 128 * 8]
+                lea             r10, [r10 - 128 * 8]
+                lea             rsp, [rsp + 129 * 8]
+                pop             rsi
+                pop             rdi
+                pop             rcx
+                pop             r12
+                ret
 
 ; adds two long number
 ;    rdi -- address of summand #1 (long number)
@@ -62,19 +89,23 @@ _start:
 ;    rcx -- length of long numbers in qwords
 ; result:
 ;    sum is written to rdi
+;    remainder is written to r13
 add_long_long:
                 push            rdi
                 push            rsi
                 push            rcx
 
-                clc
 .loop:
+
                 mov             rax, [rsi]
                 lea             rsi, [rsi + 8]
                 adc             [rdi], rax
+
                 lea             rdi, [rdi + 8]
                 dec             rcx
                 jnz             .loop
+                xor             r13, r13
+                adc             r13, 0
 
                 pop             rcx
                 pop             rsi
