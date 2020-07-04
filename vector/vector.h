@@ -187,6 +187,15 @@ struct vector
         }
         return data_ + (last - first);
     }
+    iterator erase(const_iterator first, const_iterator last) { // O(N) weak
+        for (iterator l = const_cast<iterator >(first), r = const_cast<iterator >(last); r != end(); l++, r++) {
+            std::swap(*l, *r);
+        }
+        for (size_t i = 0; i < last - first; i++) {
+            pop_back();
+        }
+        return data_ + (last - first);
+    };
     void new_buffer(size_t new_capacity) {
         T* new_data;
         size_t i = 0;
