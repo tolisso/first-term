@@ -7,6 +7,12 @@
 #include <assert.h>
 #include <iostream>
 
+#ifdef DEBUG
+#define DEBUG_IF(x) if(x)
+#else
+#define DEBUG_IF(x) if(false)
+#endif
+
 big_integer::big_integer() : arr(1) {
     arr.set(0, 0);
     sign = false;
@@ -21,7 +27,7 @@ big_integer::big_integer(int a) : arr(1){
     if (a == INT32_MIN) {
         arr.set(0, static_cast<uint32_t>(1) << 31);
         sign = true;
-    } else if (a > 0) {
+    } else if (a >= 0) {
         arr.set(0, a);
         sign = false;
     } else { // if(a < 0)
@@ -36,17 +42,17 @@ big_integer::big_integer(std::string const &str) : arr(1) {
     sign = false;
     arr.set(0, 0);
     bool result_sign;
-    std::string str_number = str;
-    if (str_number[0] == '-') {
-        str_number = str_number.substr(1, str_number.length() - 1);
+    size_t i = 0;
+    if (str[0] == '-') {
+        i++;
         result_sign = true;
     } else {
         result_sign = false;
     }
     arr.push_back(0);
-    for (size_t i = 0; i != str_number.length(); i++) {
+    for (; i != str.length(); i++) {
         mul_uint(10);
-        *this += str_number[i] - '0';
+        *this += str[i] - '0';
     }
     sign = result_sign;
 }
@@ -55,9 +61,7 @@ big_integer binary_func(big_integer a, big_integer b, std::function<uint32_t(uin
     a = a.signed_binary();
     b = b.signed_binary();
     if (a.arr.size() < b.arr.size()) {
-        big_integer c = a;
-        a = b;
-        b = c;
+        std::swap(a, b);
     }
     size_t b_size = b.arr.size();
     b.arr.resize(a.arr.size());
@@ -74,17 +78,20 @@ big_integer binary_func(big_integer a, big_integer b, std::function<uint32_t(uin
     for (size_t i = 0; i < a.arr.size(); i++) {
         c.arr.set(i, func(a.arr.get(i), b.arr.get(i)));
     }
-    return c.unsigned_binary();
+    return c.unsigned_binary().zero_abs();
 }
 
 big_integer big_integer::operator-() const {
     big_integer ans(*this);
-    ans.sign = ans.sign ^ 1;
-    return ans;
+    ans.sign = !ans.sign;
+    return ans.zero_abs();
 }
 
 big_integer& big_integer::operator+=(big_integer const &other) {
-    if ((sign ^ other.sign) == 1) {
+    if (is_zero(other)) {
+        return *this;
+    }
+    if (sign ^ other.sign) {
         return (*this -= -other);
     }
     uint32_t remainder = 0;
@@ -103,11 +110,14 @@ big_integer& big_integer::operator+=(big_integer const &other) {
         arr.set(i, left + right + remainder);
         remainder = (static_cast<uint64_t>(left) + right + remainder) >> 32;
     }
-    return strip();
+    return strip().zero_abs();
 }
 
-big_integer& big_integer::operator-=(big_integer const &other) { /// undone
-    if ((sign ^ other.sign) == 1) {
+big_integer& big_integer::operator-=(big_integer const &other) {
+    if (is_zero(other)) {
+        return *this;
+    }
+    if (sign ^ other.sign) {
         return (*this += -other);
     }
     uint32_t remainder = 0;
@@ -139,14 +149,12 @@ big_integer& big_integer::operator-=(big_integer const &other) { /// undone
         ans.sign = sign;
         *this = ans -= *this;
     }
-    return strip();
+    return strip().zero_abs();
 }
 
 big_integer& big_integer::operator*=(big_integer const &other) {
-    big_integer a = *this;
-    big_integer b = other;
-    a.sign = false;
-    b.sign = false;
+    big_integer a = this->abs();
+    big_integer b = other.abs();
     big_integer ans;
     ans.sign = false;
     ans.arr.resize(a.arr.size() + b.arr.size() + 2);
@@ -164,14 +172,12 @@ big_integer& big_integer::operator*=(big_integer const &other) {
         }
     }
     ans.sign = this->sign != other.sign;
-    return *this = ans.strip();
+    return *this = ans.strip().zero_abs();
 }
 
 big_integer& big_integer::operator/=(big_integer const &val) {
-    big_integer r(*this);
-    big_integer d(val);
-    r.sign = false;
-    d.sign = false;
+    big_integer r = this->abs();
+    big_integer d = val.abs();
     if (r < d) {
         return *this = 0;
     }
@@ -192,8 +198,8 @@ big_integer& big_integer::operator/=(big_integer const &val) {
     for (size_t k = n - m - 1; ; k--) {
         /// if your compilator hasn't got __int128 please use gmp mpz_t, logics still the same,
         /// because r3, d2 not more than 2^96
-        __int128 r3 = 0;
-        __int128 d2 = 0;
+        __uint128_t r3 = 0;
+        __uint128_t d2 = 0;
         r3 += r.arr.get(m + k);
         r3 <<= 32;
         r3 += r.arr.get(m + k - 1);
@@ -219,7 +225,7 @@ big_integer& big_integer::operator/=(big_integer const &val) {
         }
     }
     q.sign = this->sign != val.sign;
-    return *this = q.strip();
+    return *this = q.strip().zero_abs();
 }
 
 
@@ -252,9 +258,7 @@ void difference(big_integer const& dq, big_integer &r, size_t k, size_t m) {
 
 big_integer& big_integer::mul_uint(uint32_t val) {
     if (val == 0) {
-        arr = array_(1);
-        arr.set(0, 0);
-        return *this;
+        *this = 0;
     }
     uint64_t remainder = 0;
     for (size_t i = 0; i < arr.size(); i++) {
@@ -266,10 +270,13 @@ big_integer& big_integer::mul_uint(uint32_t val) {
         arr.push_back(static_cast<uint32_t>(remainder));
         remainder >>= 32;
     }
-    return strip();
+    return strip().zero_abs();
 }
 
 bool is_zero(big_integer const &a) {
+    DEBUG_IF(a.arr.size() == 1 && a.arr.get(0) == 0 && a.sign) {
+        throw "0 with sign \"-\"";
+    }
     return a.arr.size() == 1 && a.arr.get(0) == 0;
 }
 
@@ -401,7 +408,7 @@ big_integer operator>>(big_integer const& a, int shift) {
         big_integer ans = a;
         big_integer shift_mod = 1;
         shift_mod <<= (shift);
-        return ans / shift_mod - 1;
+        return (ans / shift_mod - 1).zero_abs();
     }
 }
 big_integer& big_integer::operator>>=(int shift) {
@@ -452,7 +459,7 @@ big_integer& big_integer::div_uint(uint32_t divisor) {
             break;
         }
     }
-    return strip();
+    return strip().zero_abs();
 }
 
 big_integer& big_integer::strip() {
@@ -486,7 +493,7 @@ big_integer big_integer::signed_binary() const {
     for (size_t i = 0; i < arr.size(); i++) {
         ans.arr.set(i, ans.arr.get(i) ^ UINT32_MAX);
     }
-    return ans + 1;
+    return (ans + 1).zero_abs();
 }
 big_integer big_integer::unsigned_binary() const {
     assert(!sign);
@@ -499,7 +506,7 @@ big_integer big_integer::unsigned_binary() const {
             ans.arr.set(i, ans.arr.get(i) ^ UINT32_MAX);
         }
     }
-    return ans.strip();
+    return ans.strip().zero_abs();
 }
 
 std::string to_string(big_integer const& a) {
@@ -538,4 +545,17 @@ big_integer big_integer::operator--(int) {
     big_integer ans(*this);
     *this -= 1;
     return ans;
+}
+
+big_integer big_integer::abs() const {
+    big_integer ans(*this);
+    ans.sign = false;
+    return ans;
+}
+
+big_integer& big_integer::zero_abs() {
+    if (arr.size() == 1 && arr.get(0) == 0) {
+        sign = false;
+    }
+    return *this;
 }

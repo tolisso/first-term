@@ -56,6 +56,8 @@ private:
     array_ arr;
     bool sign;
 
+    big_integer abs() const;
+    big_integer& zero_abs();
     friend bool is_zero(big_integer const& a);
     friend bool comp_by_mod(big_integer const& a, big_integer const& b);
     big_integer& mul_uint(uint32_t val);
