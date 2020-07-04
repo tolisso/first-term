@@ -30,8 +30,8 @@ struct big_integer
     big_integer& operator|=(big_integer const& rhs);
     big_integer& operator^=(big_integer const& rhs);
 
-    big_integer& operator<<=(int rhs);
-    big_integer& operator>>=(int rhs);
+    big_integer& operator<<=(size_t);
+    big_integer& operator>>=(size_t);
 
     big_integer operator+() const;
     big_integer operator-() const;
@@ -54,17 +54,15 @@ struct big_integer
     friend big_integer operator|(big_integer const& a, big_integer const& b);
     friend big_integer operator^(big_integer const& a, big_integer const& b);
 
-    friend big_integer operator<<(big_integer const& a, int b);
-    friend big_integer operator>>(big_integer const& a, int b);
+    friend big_integer operator<<(big_integer const& a, size_t b);
+    friend big_integer operator>>(big_integer const& a, size_t b);
 
     friend std::string to_string(big_integer const& a);
-
-
-
 
 private:
     std::vector<uint32_t> arr;
     bool sign;
+    static big_integer ZERO;
 
     friend bool is_zero(big_integer const& a);
     friend bool comp_by_mod(big_integer const& a, big_integer const& b);
@@ -74,8 +72,8 @@ private:
     big_integer& strip();
     friend bool compare(big_integer const& dq, big_integer const& r, size_t k, size_t m);
     friend void difference(big_integer const& dq, big_integer &r, size_t k, size_t m);
-    big_integer unsigned_binary() const;
-    big_integer signed_binary() const;
+    big_integer basic_binary_represent() const;
+    big_integer twos_complement() const;
     friend big_integer binary_func(big_integer a, big_integer b, std::function<uint32_t(uint32_t, uint32_t)> func);
 };
 
