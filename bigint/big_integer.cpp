@@ -94,6 +94,9 @@ big_integer big_integer::operator-() const {
 }
 
 big_integer& big_integer::operator+=(big_integer const &other) {
+    if (is_zero(other)) {
+        return *this;
+    }
     if ((sign ^ other.sign) == 1) {
         return (*this -= -other);
     }
@@ -117,6 +120,9 @@ big_integer& big_integer::operator+=(big_integer const &other) {
 }
 
 big_integer& big_integer::operator-=(big_integer const &other) { /// undone
+    if (is_zero(other)) {
+        return *this;
+    }
     if (sign ^ other.sign) {
         return (*this += -other);
     }
