@@ -97,7 +97,7 @@ big_integer& big_integer::operator+=(big_integer const &other) {
     if (is_zero(other)) {
         return *this;
     }
-    if ((sign ^ other.sign) == 1) {
+    if (sign ^ other.sign) {
         return (*this -= -other);
     }
     uint32_t remainder = 0;
