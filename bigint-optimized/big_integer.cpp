@@ -24,16 +24,9 @@ big_integer::big_integer(big_integer const &other) : arr(other.arr) {
 }
 
 big_integer::big_integer(int a) : arr(1){
-    if (a == INT32_MIN) {
-        arr.set(0, static_cast<uint32_t>(1) << 31);
-        sign = true;
-    } else if (a >= 0) {
-        arr.set(0, a);
-        sign = false;
-    } else { // if(a < 0)
-        arr.set(0, -a);
-        sign = true;
-    }
+    int64_t tmp = a;
+    arr.set(0, static_cast<uint32_t>(std::abs(tmp)));
+    sign = a < 0;
 }
 
 big_integer& big_integer::operator=(big_integer const& other) = default;
@@ -58,19 +51,15 @@ big_integer::big_integer(std::string const &str) : arr(1) {
 }
 
 big_integer binary_func(big_integer a, big_integer b, std::function<uint32_t(uint32_t, uint32_t)> func) {
-    a = a.signed_binary();
-    b = b.signed_binary();
+    a = a.twos_complement();
+    b = b.twos_complement();
     if (a.arr.size() < b.arr.size()) {
         std::swap(a, b);
     }
     size_t b_size = b.arr.size();
     b.arr.resize(a.arr.size());
     uint32_t val;
-    if ((b.arr.get(b_size - 1) >> 31) == 0) {
-        val = 0;
-    } else {
-        val = UINT32_MAX;
-    }
+    val = (b.arr.get(b_size - 1) >> 31) == 0 ? 0 : UINT32_MAX;
     for (size_t i = b_size; i < b.arr.size(); i++) {
         b.arr.set(i, val);
     }
@@ -78,7 +67,7 @@ big_integer binary_func(big_integer a, big_integer b, std::function<uint32_t(uin
     for (size_t i = 0; i < a.arr.size(); i++) {
         c.arr.set(i, func(a.arr.get(i), b.arr.get(i)));
     }
-    return c.unsigned_binary().zero_abs();
+    return c.basic_binary_represent().zero_abs();
 }
 
 big_integer big_integer::operator-() const {
@@ -134,11 +123,7 @@ big_integer& big_integer::operator-=(big_integer const &other) {
             right = other.arr.get(i);
         }
         arr.set(i, left - right - remainder);
-        if (right + remainder <= left) {
-            remainder = 0;
-        } else {
-            remainder = 1;
-        }
+        remainder = right + remainder <= left ? 0 : 1;
     }
     strip();
     if (remainder == 1) {
@@ -179,7 +164,7 @@ big_integer& big_integer::operator/=(big_integer const &val) {
     big_integer r = this->abs();
     big_integer d = val.abs();
     if (r < d) {
-        return *this = 0;
+        return *this = big_integer::ZERO;
     }
     if (d.arr.size() == 1) {
         r.div_uint(d.arr.get(0));
@@ -258,7 +243,7 @@ void difference(big_integer const& dq, big_integer &r, size_t k, size_t m) {
 
 big_integer& big_integer::mul_uint(uint32_t val) {
     if (val == 0) {
-        *this = 0;
+        *this = big_integer::ZERO;
     }
     uint64_t remainder = 0;
     for (size_t i = 0; i < arr.size(); i++) {
@@ -320,7 +305,7 @@ bool operator<(big_integer const &a, big_integer const &b) {
     if (a.sign > b.sign) {
         return true;
     }
-    if (a.sign == 0) { // && b.sign == 0
+    if (a.sign == false) { // && b.sign == 0
         return comp_by_mod(a, b);
     } else { // a.sign == 1 && b.sign == 1
         return comp_by_mod(b, a);
@@ -393,14 +378,14 @@ big_integer& big_integer::operator^=(big_integer const& other) {
     return *this = *this ^ other;
 }
 big_integer big_integer::operator~() const {
-    return binary_func(*this, 0, [](uint32_t a, uint32_t b)->uint32_t {return ~a;});
+    return binary_func(*this, big_integer::ZERO, [](uint32_t a, uint32_t b)->uint32_t {return ~a;});
 }
 void remove_pref(array_ &vec, size_t to) {
     vec.erase(0, to);
 }
 big_integer operator>>(big_integer const& a, int shift) {
     size_t discharge = shift / 32;
-    if (a >= 0) {
+    if (a >= big_integer::ZERO) {
         big_integer ans = a;
         remove_pref(ans.arr, discharge);
         return ans.div_uint(static_cast<uint32_t > (1) << (shift % 32));
@@ -473,7 +458,7 @@ big_integer& big_integer::strip() {
     return *this;
 }
 
-big_integer big_integer::signed_binary() const {
+big_integer big_integer::twos_complement() const {
     big_integer ans(*this);
     if (!sign) {
         if ((arr.get(arr.size() - 1) >> 31) != 0) {
@@ -495,7 +480,7 @@ big_integer big_integer::signed_binary() const {
     }
     return (ans + 1).zero_abs();
 }
-big_integer big_integer::unsigned_binary() const {
+big_integer big_integer::basic_binary_represent() const {
     assert(!sign);
     big_integer ans(*this);
     ans.sign = (arr.get(arr.size() - 1) >> 31);
@@ -559,3 +544,5 @@ big_integer& big_integer::zero_abs() {
     }
     return *this;
 }
+
+big_integer big_integer::ZERO = 0;

@@ -104,17 +104,24 @@ void array_::make_unique() { /// Pre: is_big == true;
 }
 
 void array_::pop_back() {
-    to_big();
-    make_unique();
-    big.arr->pop_back();
+    if (is_big) {
+        make_unique();
+        big.arr->pop_back();
+    }
     size_--;
 }
 
 void array_::push_back(uint32_t i) {
-    to_big();
-    make_unique();
-    big.arr->push_back(i);
-    size_++;
+    if (!is_big && size_ == 4) {
+        to_big();
+    }
+    if (is_big) {
+        make_unique();
+        big.arr->push_back(i);
+        size_++;
+    } else {
+        small.arr[size_++] = i;
+    }
 }
 
 void array_::resize(size_t size) {

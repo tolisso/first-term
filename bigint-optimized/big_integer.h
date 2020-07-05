@@ -55,6 +55,7 @@ struct big_integer
 private:
     array_ arr;
     bool sign;
+    static big_integer ZERO;
 
     big_integer abs() const;
     big_integer& zero_abs();
@@ -66,8 +67,8 @@ private:
     big_integer& strip();
     friend bool compare(big_integer const& dq, big_integer const& r, size_t k, size_t m);
     friend void difference(big_integer const& dq, big_integer &r, size_t k, size_t m);
-    big_integer unsigned_binary() const;
-    big_integer signed_binary() const;
+    big_integer twos_complement() const;
+    big_integer basic_binary_represent() const;
     friend big_integer binary_func(big_integer a, big_integer b, std::function<uint32_t(uint32_t, uint32_t)> func);
 };
 
