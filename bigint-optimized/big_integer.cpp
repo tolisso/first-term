@@ -50,9 +50,9 @@ big_integer::big_integer(std::string const &str) : arr(1) {
     sign = result_sign;
 }
 
-big_integer binary_func(big_integer a, big_integer b, std::function<uint32_t(uint32_t, uint32_t)> func) {
-    a = a.twos_complement();
-    b = b.twos_complement();
+big_integer binary_func(big_integer const& f, big_integer const& s, std::function<uint32_t(uint32_t, uint32_t)> func) {
+    big_integer a = f.twos_complement();
+    big_integer b = s.twos_complement();
     if (a.arr.size() < b.arr.size()) {
         std::swap(a, b);
     }

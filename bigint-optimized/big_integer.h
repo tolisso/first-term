@@ -69,7 +69,7 @@ private:
     friend void difference(big_integer const& dq, big_integer &r, size_t k, size_t m);
     big_integer twos_complement() const;
     big_integer basic_binary_represent() const;
-    friend big_integer binary_func(big_integer a, big_integer b, std::function<uint32_t(uint32_t, uint32_t)> func);
+    friend big_integer binary_func(big_integer const& a, big_integer const& b, std::function<uint32_t(uint32_t, uint32_t)> func);
 };
 
 big_integer operator+(big_integer a, big_integer const& b);

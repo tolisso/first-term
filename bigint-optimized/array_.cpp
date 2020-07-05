@@ -112,15 +112,18 @@ void array_::pop_back() {
 }
 
 void array_::push_back(uint32_t i) {
-    if (!is_big && size_ == 4) {
-        to_big();
-    }
     if (is_big) {
         make_unique();
         big.arr->push_back(i);
         size_++;
-    } else {
-        small.arr[size_++] = i;
+    } else { // is small
+        if (size_ == 4) {
+            to_big();
+            big.arr->push_back(i);
+            size_++;
+        } else {
+            small.arr[size_++] = i;
+        }
     }
 }
 
