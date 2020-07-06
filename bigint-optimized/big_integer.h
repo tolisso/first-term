@@ -2,7 +2,7 @@
 #define BIG_INTEGER_H
 
 #include <functional>
-#include "array_.h"
+#include "ui32array.h"
 
 struct big_integer
 {
@@ -53,7 +53,7 @@ struct big_integer
     friend std::string to_string(big_integer const& a);
 
 private:
-    array_ arr;
+    ui32array arr;
     bool sign;
     static big_integer ZERO;
 

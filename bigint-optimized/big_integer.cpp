@@ -14,7 +14,6 @@
 #endif
 
 big_integer::big_integer() : arr(1) {
-    arr.set(0, 0);
     sign = false;
 }
 big_integer::~big_integer() = default;
@@ -33,7 +32,6 @@ big_integer& big_integer::operator=(big_integer const& other) = default;
 
 big_integer::big_integer(std::string const &str) : arr(1) {
     sign = false;
-    arr.set(0, 0);
     bool result_sign;
     size_t i = 0;
     if (str[0] == '-') {
@@ -380,7 +378,7 @@ big_integer& big_integer::operator^=(big_integer const& other) {
 big_integer big_integer::operator~() const {
     return binary_func(*this, big_integer::ZERO, [](uint32_t a, uint32_t b)->uint32_t {return ~a;});
 }
-void remove_pref(array_ &vec, size_t to) {
+void remove_pref(ui32array &vec, size_t to) {
     vec.erase(0, to);
 }
 big_integer operator>>(big_integer const& a, int shift) {
