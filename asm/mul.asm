@@ -33,26 +33,42 @@ _start:
 ;   r8 - result (sz = 128 * 2)
 ;   r9 - first multiplier (sz = 128)
 ;   r10 - second multiplier (sz = 128)
+
 mul_long_long:
                 push            r12
                 push            rcx
                 push            rdi
                 push            rsi
-                mov             r11, 128
-                lea             rsp, [rsp - 129 * 8]
-
-                mov             rcx, 128 * 2
+                
+                xor             r13, r13
+                add             r13, rcx ; 0
+                add             r13, rcx ; 1
+                add             r13, rcx ; 2
+                add             r13, rcx ; 3
+                add             r13, rcx ; 4
+                add             r13, rcx ; 5
+                add             r13, rcx ; 6
+                add             r13, rcx ; 7
+                
+                mov             r11, rcx
+                sub             rsp, r13
+                sub             rsp, 8
+                
+                push            rcx
+                add             rcx, rcx
                 mov             rdi, r8
                 call            set_zero
+                pop             rcx
 
                 mov             r12, rsp
+                push            r13
 .mainloop:
-
-                mov             rcx, 129
+                
+                inc             rcx
                 mov             rdi, r12
                 call            set_zero
 
-                mov             rcx, 128
+                dec             rcx
                 mov             rdi, r12
                 mov             rsi, r9
                 call            add_long_long
@@ -60,7 +76,7 @@ mul_long_long:
 
                 mov             rbx, [r10]
 
-                mov             rcx, 129
+                inc             rcx
                 mov             rdi, r12
                 call            mul_long_short
 
@@ -71,12 +87,16 @@ mul_long_long:
                 lea             r10, [r10 + 8]
                 lea             r8, [r8 + 8]
 
+                dec             rcx
                 dec             r11
                 jnz             .mainloop
 ; .mainloop:end
-                lea             r8, [r8 - 128 * 8]
-                lea             r10, [r10 - 128 * 8]
-                lea             rsp, [rsp + 129 * 8]
+                
+                pop             r13
+                sub             r8, r13
+                sub             r10, r13
+                add             rsp, r13
+                add             rsp, 8
                 pop             rsi
                 pop             rdi
                 pop             rcx
