@@ -35,20 +35,14 @@ _start:
 ;   r10 - second multiplier (sz = 128)
 
 mul_long_long:
+                push            rax
                 push            r12
                 push            rcx
                 push            rdi
                 push            rsi
                 
-                xor             r13, r13
-                add             r13, rcx ; 0
-                add             r13, rcx ; 1
-                add             r13, rcx ; 2
-                add             r13, rcx ; 3
-                add             r13, rcx ; 4
-                add             r13, rcx ; 5
-                add             r13, rcx ; 6
-                add             r13, rcx ; 7
+                mov             r13, rcx
+                shl             r13, 3
                 
                 mov             r11, rcx
                 sub             rsp, r13
@@ -101,6 +95,7 @@ mul_long_long:
                 pop             rdi
                 pop             rcx
                 pop             r12
+                pop             rax
                 ret
 
 ; adds two long number
