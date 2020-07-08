@@ -9,7 +9,8 @@
 #include <cstddef>
 
 struct small_arr {
-    uint32_t arr[4];
+    static const size_t MAX_SIZE = 4;
+    uint32_t arr[MAX_SIZE];
     uint32_t const& operator[](size_t) const;
     uint32_t& operator[](size_t);
     void equate(small_arr const&, size_t const size);

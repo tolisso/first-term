@@ -1,7 +1,7 @@
 #include "ui32array.h"
 
 ui32array::ui32array(size_t size) {
-    if (size > SMALL_MAX_SIZE) {
+    if (size > small.MAX_SIZE) {
         big->arr = std::vector<uint32_t>();
         big->arr.resize(size);
         big->refs = 1;
@@ -108,7 +108,7 @@ void ui32array::push_back(uint32_t i) {
         big->arr.push_back(i);
         size_++;
     } else { // is small
-        if (size_ == SMALL_MAX_SIZE) {
+        if (size_ == small.MAX_SIZE) {
             to_big();
             big->arr.push_back(i);
             size_++;
@@ -119,7 +119,7 @@ void ui32array::push_back(uint32_t i) {
 }
 
 void ui32array::resize(size_t size) {
-    if (size > SMALL_MAX_SIZE && !is_big) {
+    if (size > small.MAX_SIZE && !is_big) {
         to_big();
     }
     if (is_big) {
