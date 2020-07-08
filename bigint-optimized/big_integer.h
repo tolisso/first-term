@@ -1,9 +1,8 @@
 #ifndef BIG_INTEGER_H
 #define BIG_INTEGER_H
 
-#include <cstddef>
-#include <gmp.h>
-#include <iosfwd>
+#include <functional>
+#include "ui32array.h"
 
 struct big_integer
 {
@@ -12,7 +11,6 @@ struct big_integer
     big_integer(int a);
     explicit big_integer(std::string const& str);
     ~big_integer();
-
     big_integer& operator=(big_integer const& other);
 
     big_integer& operator+=(big_integer const& rhs);
@@ -45,10 +43,33 @@ struct big_integer
     friend bool operator<=(big_integer const& a, big_integer const& b);
     friend bool operator>=(big_integer const& a, big_integer const& b);
 
+    friend big_integer operator&(big_integer const& a, big_integer const& b);
+    friend big_integer operator|(big_integer const& a, big_integer const& b);
+    friend big_integer operator^(big_integer const& a, big_integer const& b);
+
+    friend big_integer operator<<(big_integer const& a, int b);
+    friend big_integer operator>>(big_integer const& a, int b);
+
     friend std::string to_string(big_integer const& a);
 
 private:
-    mpz_t mpz;
+    ui32array arr;
+    bool sign;
+    static big_integer ZERO;
+
+    big_integer abs() const;
+    big_integer& zero_abs();
+    friend bool is_zero(big_integer const& a);
+    friend bool comp_by_mod(big_integer const& a, big_integer const& b);
+    big_integer& mul_uint(uint32_t val);
+    uint32_t mod_uint(uint32_t divisor) const;
+    big_integer& div_uint(uint32_t divisor);
+    big_integer& strip();
+    friend bool compare(big_integer const& dq, big_integer const& r, size_t k, size_t m);
+    friend void difference(big_integer const& dq, big_integer &r, size_t k, size_t m);
+    big_integer twos_complement() const;
+    big_integer basic_binary_represent() const;
+    friend big_integer binary_func(big_integer const& a, big_integer const& b, std::function<uint32_t(uint32_t, uint32_t)> func);
 };
 
 big_integer operator+(big_integer a, big_integer const& b);
@@ -57,12 +78,7 @@ big_integer operator*(big_integer a, big_integer const& b);
 big_integer operator/(big_integer a, big_integer const& b);
 big_integer operator%(big_integer a, big_integer const& b);
 
-big_integer operator&(big_integer a, big_integer const& b);
-big_integer operator|(big_integer a, big_integer const& b);
-big_integer operator^(big_integer a, big_integer const& b);
 
-big_integer operator<<(big_integer a, int b);
-big_integer operator>>(big_integer a, int b);
 
 bool operator==(big_integer const& a, big_integer const& b);
 bool operator!=(big_integer const& a, big_integer const& b);
