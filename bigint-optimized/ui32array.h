@@ -32,6 +32,9 @@ public:
 private:
     void to_big();
     void make_unique();
+
+    static const size_t SMALL_MAX_SIZE = 4;
+
     size_t size_;
     bool is_big;
     union {
